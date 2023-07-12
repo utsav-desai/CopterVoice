@@ -1,0 +1,18 @@
+token:
+  auth_server_url : https://indus.api.michelin.com/idp/v1/internal/oauth/token/accesstoken?grant_type=client_credentials
+  client_id : kMenwH51Dq6srvyEXPeZb01KvCSNGOLo
+  client_secret : G01p1zhqB7GXPp6s
+
+headers:
+  apikey : kMenwH51Dq6srvyEXPeZb01KvCSNGOLo
+  content_type: application/json
+
+api_url: https://indus.api.michelin.com/openaieus/deployments/gpt-4-eus/chat/completions?api-version=2023-03-15-preview
+EUS:
+ api_url gpt35: https://indus.api.michelin.com/openaieus/deployments/gpt-35-turbo-eus/completions?api-version=2022-12-01
+ api_url_gpt4: https://indus.api.michelin.com/openaieus/deployments/gpt-4-eus/chat/completions?api-version=2023-03-15-preview
+ scope: aicp-openai-eus
+
+WEU:
+ api_url gpt35: https://indus.api.michelin.com/openai/deployments/gpt-35-weu/completions?api-version=2022-12-01
+ scope: aicp-openai-weu

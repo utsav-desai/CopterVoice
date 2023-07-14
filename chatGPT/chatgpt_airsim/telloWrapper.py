@@ -1,16 +1,11 @@
+from djitellopy import Tello
 import math
 import numpy as np
 import os
 import io
+import time
 from PIL import Image
-import cv2  
-from djitellopy import Tello
-
-objects_dict = {
-    "mustang 1": "Dodge_SRT_Hellcat_Dodge_Challenger_Hellcat_SRT",
-    "mustang 2": "Dodge_SRT_Hellcat_Dodge_Challenger_Hellcat_SRT2",
-    "benz": "FbxScene_uploads_files_2787791_Mercedes+Benz+GLS+580"
-}
+import cv2
 
 
 class TelloWrapper:
@@ -18,79 +13,96 @@ class TelloWrapper:
         self.tello = Tello()
         self.tello.connect()
         self.tello.streamon()
-        
+
     def takeoff(self):
         self.tello.takeoff()
 
     def land(self):
         self.tello.land()
 
-    def get_drone_position(self):
-        pose = self.client.simGetVehiclePose()
-        return [pose.position.x_val, pose.position.y_val, pose.position.z_val]
+    def move(self, direction, distance):
+        '''
+            direction: 'forward', 'back', 'right', 'left', 'up', 'down' to specify in which direction to move...
+            distance: distance to move in centimeters
+        '''
+        if direction == 'up':
+            self.tello.move_up(distance)
+        elif direction == 'down':
+            self.tello.move_down(distance)
+        elif direction == 'forward':
+            self.tello.move_forward(distance)
+        elif direction == 'back':
+            self.tello.move_back(distance)
+        elif direction == 'right':
+            self.tello.move_right(distance)
+        elif direction == 'left':
+            self.tello.move_left(distance)
 
-    def fly_to(self, point, speed = 2):
-        if point[2] > 0:
-            self.client.moveToPositionAsync(point[0], point[1], -point[2], speed).join()
-        else:
-            self.client.moveToPositionAsync(point[0], point[1], point[2], speed).join()
+    def rotate(self, direction, angle):
+        '''
+            direction: 'clockwise', 'counter_clockwise' specify the direction to rotate
+            angle: amount to rotate in given direction in degrees
+        '''
+        if direction == 'clockwise':
+            self.tello.rotate_clockwise(angle)
+        elif direction == 'counter_clockwise':
+            self.tello.rotate_counter_clockwise(angle)
 
-    def fly_path(self, points):
-        airsim_points = []
-        for point in points:
-            if point[2] > 0:
-                airsim_points.append(airsim.Vector3r(point[0], point[1], -point[2]))
-            else:
-                airsim_points.append(airsim.Vector3r(point[0], point[1], point[2]))
-        self.client.moveOnPathAsync(airsim_points, 5, 120, airsim.DrivetrainType.ForwardOnly, airsim.YawMode(False, 0), 20, 1).join()
-
-    def set_yaw(self, yaw, yawRate = 3):
-        self.client.rotateToYawAsync(yaw, yawRate).join()
-
-    def get_yaw(self):
-        orientation_quat = self.client.simGetVehiclePose().orientation
-        yaw = airsim.to_eularian_angles(orientation_quat)[2]
-        return yaw
-
-    def get_position(self, object_name):
-        query_string = objects_dict[object_name] + ".*"
-        object_names_ue = []
-        while len(object_names_ue) == 0:
-            object_names_ue = self.client.simListSceneObjects(query_string)
-        pose = self.client.simGetObjectPose(object_names_ue[0])
-        return [pose.position.x_val, pose.position.y_val, pose.position.z_val]
-    
     def saveImage(self, filename):
-        if not os.path.exists("./images"):
+        if not os.path.exists("/images"):
         # If it doesn't exist, create it
-            os.makedirs("./images")
-        frame_read=self.tello.get_frame_read()
-        frame = cv2.cvtColor(frame_read.frame,cv2.COLOR_BGR2RGB)
-        cv2.imwrite("images/"+filename+".png",frame)
+            os.makedirs("images")
         
+        frame_read = self.tello.get_frame_read()
+        cv2.imwrite('images' + os.sep + filename + '.png')
+        print('Saved image: ', 'images' + os.sep + filename + '.png')
     
- #  def carPose(self, img_path):
- #      model = tf.keras.models.load_model('car')
- #
- #      img = tf.keras.utils.load_img(os.path.normpath('C:/Users/E080329/utsavtemp/PromptCraft-Robotics-main/chatgpt_airsim/images' + os.sep + img_path), target_size = (2510, 125))
- #      x = tf.keras.utils.img_to_array(img)
- #      x /= 255
- #      x = np.expand_dims(x, axis = 0)
- #      images = np.vstack([x])
- #      classes = model.predict(images, batch_size=10)
- #      print(np.argmax(classes[0]))
- #      print(classes[0])
- #
- #      if np.argmax(classes[0]) == 0:
- #          return 'Back'
- #      elif np.argmax(classes[0]) == 1:
- #          return 'Front'
- #      elif np.argmax(classes[0]) == 2:
- #          return 'Side Left'
- #      elif np.argmax(classes[0]) == 3:
- #          return 'Side Right'
+    def get_yaw(self) -> int:
+        """Get yaw in degree
+        Returns:
+            int: yaw in degree
+        """
+        return self.tello.get_state_field('yaw')
+    
+    def get_height(self) -> int:
+        """Get current height in cm
+        Returns:
+            int: height in cm
+        """
+        return self.tello.get_state_field('h')
+    
+    def get_battery(self) -> int:
+        """Get current battery percentage
+        Returns:
+            int: 0-100
+        """
+        return self.tello.get_state_field('bat')
+    
+    def send_keepalive(self):
+        """Send a keepalive packet to prevent the drone from landing after 15s
+        """
+        self.tello.send_control_command("keepalive")
+
+    def turn_motor_on(self):
+        """Turn on motors without flying (mainly for cooling)
+        """
+        self.tello.send_control_command("motoron")
+
+    def turn_motor_off(self):
+        """Turns off the motor cooling mode
+        """
+        self.tello.send_control_command("motoroff")
 
 
 if __name__ == '__main__':
-    aw = AirSimWrapper()
-    print(aw.find_car_color())
+    aw = TelloWrapper()
+    print('-----' * 10)
+    print('Turning motor on !!! Beware...')
+    print('-----' * 10)
+    time.sleep(5)
+    aw.turn_motor_on()
+    time.sleep(5)
+    print('-----' * 10)
+    print('Turning motor off...')
+    print('-----' * 10)
+    aw.turn_motor_off()

@@ -62,10 +62,12 @@ def horizAlign(thresh, car_id):
             print('Y movement too low')
             distanceY = 0
         print('To move:', distanceX, distanceY)
-        current_position = aw.get_drone_position()
-        target_position = [current_position[0], current_position[1] - distanceX, current_position[2] + distanceY]
-        # print('Moving from', current_position, 'to', target_position)
-        aw.fly_to(target_position, speed=1)
+        # current_position = aw.get_drone_position()
+        # target_position = [current_position[0], current_position[1] - distanceX, current_position[2] + distanceY]
+        # # print('Moving from', current_position, 'to', target_position)
+        # aw.fly_to(target_position, speed=1)
+        aw.move('right', distanceX)
+        aw.move('down', distanceY)
 
 
         last_xError = xError
@@ -100,10 +102,11 @@ def align(car_id):
             yError = coverage - targetPercentage
             distance = closingDirection*closingp*yError
 
-            current_position = aw.get_drone_position()
-            target_position = [current_position[0] - distance, current_position[1], current_position[2]]
-            # print('Moving from', current_position, 'to', target_position)
-            aw.fly_to(target_position, speed=1)
+            # current_position = aw.get_drone_position()
+            # target_position = [current_position[0] - distance, current_position[1], current_position[2]]
+            # # print('Moving from', current_position, 'to', target_position)
+            # aw.fly_to(target_position, speed=1)
+            aw.move('forward', distance)
             horizAlign(thresh, car_id)
 
             last_coverage = coverage
@@ -125,7 +128,7 @@ def align(car_id):
 if __name__ == '__main__':
     aw.takeoff()
     # aw.set_yaw(30, 5)
-    current_position = aw.get_drone_position()
-    target_position = [current_position[0] + 2, current_position[1] + 10, current_position[2]]
-    aw.fly_to(target_position, speed=2)
+    # current_position = aw.get_drone_position()
+    # target_position = [current_position[0] + 2, current_position[1] + 10, current_position[2]]
+    # aw.fly_to(target_position, speed=2)
     align(0)

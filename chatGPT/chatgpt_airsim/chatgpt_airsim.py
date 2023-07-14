@@ -2,15 +2,17 @@ import re
 from tkinter.messagebox import QUESTION
 from telloWrapper import *
 from chatgpt import *
-from boxCentering import *
+from boxCentering import align  #TODO
 from streamlit_combo_api_call import api_call
-from tiny_yolo import *
+from tiny_yolo import *  #TODO
 from speechToText import hear
 import math
 import numpy as np
 import os
 import json
 import time
+
+aw = TelloWrapper()  #TODO
 
 prompt = "prompts/airsim_basic.txt"
 sysprompt = "system_prompts/airsim_basic.txt"
@@ -46,7 +48,7 @@ def simpleCommands(question):
 def main():
 
     print(f"Initializing Tello...")
-    aw = TelloWrapper()
+    
 
     getAns(prompt)
 
@@ -57,7 +59,6 @@ def main():
         'Function Clarification: Please specify the function which is to be used for the task:' and now add which ever task is confusing to you.
 
         You are supossed to remember all the previous conversion till the session ends, and should be able to communicate continuously without repeating informations again and again in every prompt.
-        If you are clear about all the things listed above, confirm by printing:'I do understand your requirements.'
         No need to give takeoff commands everytime.
 
         Below given is the list of all the functions which you can refer:
@@ -72,7 +73,7 @@ def main():
         aw.turn_motor_on(self): Turn on motors without flying (mainly for cooling)
         aw.turn_motor_off(self):Turns off the motor cooling mode
         aw.saveImage(self, filename): used to save what the drone is currently looking at with a given name-filename, Important:you should not provide the extension here
-        align(): used to go close to the car after it's detection. No parameters should be given.
+        align(aw, 0): used to go close to the car after it's detection. No parameters should be given.
         detect(image_path): a car detection model, used to detect any car in the image. Input: image_path-path of the image in which the car is to be detected. Output: carBox - a list of tuples of the form (bounding_box, car_color), consisting of every car detected in the current frame. If no cars are found, an empty list is returned.
         api_call(image_path): used to get tyre dimensions. Input: image_path - name of the image for which tyre dimensions are to be found. Output: tyre_dimensions
 
@@ -100,12 +101,13 @@ def main():
             'BLUE' : "\033[34m"} 
     mode = input('How would you like to give commands to drone: voice or text?')
     while True:
+        print("Charge Remiaining -->",aw.get_battery())  #TODO
         if mode == 'text' or mode == 'type' or mode == 'prompt':
             question = input(colors['GREEN'] + "AirSim> " + colors['ENDC'])
         elif mode == 'voice' or mode == 'Voice' or mode == 'audio':
-            time.sleep(10)
+            time.sleep(0.5)
             print('Be ready to speak...')
-            time.sleep(3)
+            time.sleep(0.5)
             question = hear()
             print()
 
@@ -120,19 +122,29 @@ def main():
         if isSimple:
             isSimple = False
             continue
-
+        
+        start = time.time()
+        
         response = getAns(question)
+        print("-----" * 10)
+        print("GPT response time: ", time.time() - start)
+        print("-----" * 10)
         print(f"\n{response}\n")
         code = extract_python_code(response)
         if code is not None:
             print("Please wait while I run the code on Drone...")
             try:
-                exec(extract_python_code(response))
+                codeList = extract_python_code(response).split('\n')
+                for code in codeList:
+                    print('Current executing: ', code)
+                    exec(code)  #TODO
             except Exception as e:
                 print(e)
             # print(code)
             # exec(code)
             print("Done!\n")
+
+        aw.rotate('clockwise', 0)  #TODO
     
 if __name__ == '__main__':
     main()

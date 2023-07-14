@@ -1,7 +1,7 @@
 from telloWrapper import *
+from djitellopy import Tello
 from tiny_yolo import *
 # from yolonas import *
-
 
 #todo: sort car list by x coordinate
 
@@ -14,11 +14,10 @@ run a while loop on this until center is within a certain threshold
 image size: 256x144
 '''
 
-aw = TelloWrapper()
-aw.saveImage('centering')
 
 
-def horizAlign(thresh, car_id):
+
+def horizAlign(aw, thresh, car_id):
     p = 0.06 #proportional constant
     d = -0.01 #differential constant
     direction = 1
@@ -29,9 +28,11 @@ def horizAlign(thresh, car_id):
 
     while True:
         # input('Press Enter to move to move forward...')
-        aw.saveImage('centering')
-        # boxCoords = carBBox('centering.png')[1][0]  # assumption: just one car present in the frame
-        boxCoords, _ = detect('centering.png')[car_id]
+        # aw.saveImage('centering')
+        frame = aw.get_frame()
+        
+        
+        boxCoords, _ = detect(frame)[car_id]
         xCenter = int((boxCoords[0] + boxCoords[2])/2)
         yCenter = int((boxCoords[1] + boxCoords[3])/2)
 
@@ -75,20 +76,19 @@ def horizAlign(thresh, car_id):
 
 
 
-def align(car_id):
+def align(aw, car_id):
     thresh = 20 #threshold limit on how accurate box needs centering(in pixels)
     targetPercentage = 80
     while True:
-        horizAlign(thresh, car_id)
+        horizAlign(aw, thresh, car_id)
 
         last_coverage = 0
         closingDirection = 1
         closingp = 0.1
         
         while True:
-            aw.saveImage('centering1')
-            # boxCoords = carBBox('centering1.png')[1][0]  # assumption: just one car present in the frame
-            boxCoords, _ = detect('centering.png')[car_id]
+            frame = aw.get_frame()
+            boxCoords, _ = detect(frame)[car_id]
             yRange = abs(boxCoords[0] - boxCoords[2])
             coverage = (yRange / 256)*100
             print('Current coverage: ', coverage, '%')
@@ -104,15 +104,15 @@ def align(car_id):
 
             # current_position = aw.get_drone_position()
             # target_position = [current_position[0] - distance, current_position[1], current_position[2]]
-            # # print('Moving from', current_position, 'to', target_position)
+            # print('Moving from', current_position, 'to', target_position)
             # aw.fly_to(target_position, speed=1)
-            aw.move('forward', distance)
-            horizAlign(thresh, car_id)
+            # aw.move('forward', distance)
+            horizAlign(aw, thresh, car_id)
 
             last_coverage = coverage
         
         # boxCoords = carBBox('centering1.png')[1][0]  # assumption: just one car present in the frame
-        boxCoords, _ = detect('centering.png')[car_id]
+        boxCoords, _ = detect(frame)[car_id]
         xCenter = int((boxCoords[0] + boxCoords[2])/2)
         xError = xCenter - 128  #current offset of bounding box from center
         yCenter = int((boxCoords[1] + boxCoords[3])/2)
@@ -121,14 +121,20 @@ def align(car_id):
         coverage = (yRange / 256)*100
         targetPercentage  = min(targetPercentage + 5, 80)
         if abs(xError) < thresh and abs(yError) < thresh + 35 and coverage >= targetPercentage - 10:
+            start_point = (boxCoords[0], boxCoords[1])
+            end_point = (boxCoords[2], boxCoords[3])
+            image = cv2.rectangle(frame, start_point, end_point, (255, 0, 0), 2)
+            cv2.imshow('Aligned', image)
             print('All set!!!')
             aw.saveImage('final')
             break
 
 if __name__ == '__main__':
-    aw.takeoff()
+    aw = TelloWrapper()
+    aw.saveImage("test")
+    # aw.takeoff()
     # aw.set_yaw(30, 5)
     # current_position = aw.get_drone_position()
     # target_position = [current_position[0] + 2, current_position[1] + 10, current_position[2]]
     # aw.fly_to(target_position, speed=2)
-    align(0)
+    align(aw,0)

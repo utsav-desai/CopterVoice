@@ -54,8 +54,15 @@ class TelloWrapper:
             os.makedirs("images")
         
         frame_read = self.tello.get_frame_read()
-        cv2.imwrite('images' + os.sep + filename + '.png')
-        print('Saved image: ', 'images' + os.sep + filename + '.png')
+        cv2.imwrite('images' + os.sep + filename + '.jpg',frame_read.frame)
+        print('Saved image: ', 'images' + os.sep + filename + '.jpg')
+    
+    def get_frame(self):
+        frame_read = self.tello.get_frame_read()
+        cv2.imshow('output', frame_read.frame)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        return Image.fromarray(frame_read.frame)
     
     def get_yaw(self) -> int:
         """Get yaw in degree

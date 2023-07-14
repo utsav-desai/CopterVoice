@@ -33,9 +33,9 @@ def convert_rgb_to_names(rgb_tuple):
     distance, index = kdt_db.query(rgb_tuple)
     return names[index]
 
-def detect(img_path):
-    img_path = r'C:\Users\E080329\utsavtemp\PromptCraft-Robotics-main\chatgpt_airsim\images' + os.sep + img_path
-    image = Image.open(img_path)
+def detect(image):
+    #img_path = image
+    #image = Image.open(img_path)
 
     model = YolosForObjectDetection.from_pretrained('hustvl/yolos-tiny')
 
@@ -92,4 +92,4 @@ def detect(img_path):
         return []
 
 if __name__ == '__main__':
-    print(detect('centering.png'))
+    print(detect('images/centering.png'))

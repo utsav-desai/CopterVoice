@@ -11,8 +11,14 @@ import numpy as np
 import os
 import json
 import time
+import threading
+
+
 
 aw = TelloWrapper()  #TODO
+
+
+
 
 prompt = "prompts/airsim_basic.txt"
 sysprompt = "system_prompts/airsim_basic.txt"
@@ -33,8 +39,9 @@ def extract_python_code(content):
         return None
 
 def simpleCommands(question):
-    if question == 'takeoff':
+    if question == 'takeoff' or question == 'take off':
         aw.takeoff()
+        aw.rotate("clockwise",0)
         return True
     elif question == 'land':
         aw.land()
@@ -83,7 +90,7 @@ def main():
 
         Format of the required output:
         Paragraph 1: Details of the task(maximum 2 lines)
-        Paragraph 2: Output a code command that achieves the desired goal.  (Take care to not to output more than one python code block)
+        Paragraph 2: Output a python snippet that achieves the desired goal.  (Take care to not to output more than one python code block)
         Paragraph 3: Reason explaining why the above code is correct( in no more than 3 lines)
 
         Whenever a task is given to you, you are supossed to stick to just do that task and not to make any other movements; i.e. you are not supossed ot make any assumptions.
@@ -105,11 +112,9 @@ def main():
         if mode == 'text' or mode == 'type' or mode == 'prompt':
             question = input(colors['GREEN'] + "AirSim> " + colors['ENDC'])
         elif mode == 'voice' or mode == 'Voice' or mode == 'audio':
-            time.sleep(0.5)
-            print('Be ready to speak...')
-            time.sleep(0.5)
+            
             question = hear()
-            print()
+ 
 
         if question == "quit" or question == "exit":
             break
@@ -125,24 +130,24 @@ def main():
         
         start = time.time()
         
+        # aw.rotate("clockwise",0)
         response = getAns(question)
-        print("-----" * 10)
-        print("GPT response time: ", time.time() - start)
-        print("-----" * 10)
         print(f"\n{response}\n")
         code = extract_python_code(response)
         if code is not None:
             print("Please wait while I run the code on Drone...")
             try:
-                codeList = extract_python_code(response).split('\n')
-                for code in codeList:
-                    print('Current executing: ', code)
-                    exec(code)  #TODO
+                if code[:3]=="aw":
+                    codeList = extract_python_code(response).split('\n')
+                    for code in codeList:
+                        print('Current executing: ', code)
+                        exec(code)  #TODO
+                else:
+                    exec(code)
             except Exception as e:
                 print(e)
             # print(code)
             # exec(code)
-            print("Done!\n")
 
         aw.rotate('clockwise', 0)  #TODO
     

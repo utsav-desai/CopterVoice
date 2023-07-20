@@ -1,20 +1,18 @@
-import configparser
-import os
-from tiny_yolo import detect
-from PIL import Image
-# config = configparser.ConfigParser()
-# config.read('chatgpt_airsim/settings.ini')
-#
-# images = config['images']['imageSaveFolder']
-#
-# print(images)
+import threading
+import time
 
-image = Image.open("images/test.jpg")
-
-
-boxCoords, _ = detect(image)[0]
-xCenter = int((boxCoords[0] + boxCoords[2])/2)
-yCenter = int((boxCoords[1] + boxCoords[3])/2)
-
-
-print(boxCoords)
+def test():
+    while True:
+        print("Inside Test")
+        time.sleep(2)
+        
+t1 = threading.Thread(target=test)
+print("1")
+print("2")
+print("3")
+print("4")
+t1.start()
+print("5")
+time.sleep(2)
+print(2)
+print(2)

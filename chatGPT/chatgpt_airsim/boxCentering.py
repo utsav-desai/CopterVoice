@@ -26,7 +26,6 @@ def horizAlign(thresh, car_id):
 
     last_xError = 0
 
-
     while True:
         # input('Press Enter to move to move forward...')
         aw.saveImage('centering')

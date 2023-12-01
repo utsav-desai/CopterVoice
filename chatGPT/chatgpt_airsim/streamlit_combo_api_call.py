@@ -57,17 +57,18 @@ def get_access_token(env=None):
     Write a config file for env specific details
     """
     try:
-        # url = 'https://dev.api.michelin.com/idp/v1/internal/oauth/token/accesstoken?grant_type=client_credentials'
-        url = 'https://indus.api.michelin.com/idp/v1/internal/oauth/token/accesstoken?grant_type=client_credentials'
+        # Credentials are hidden!!!
+        
+        url = ''
 
         # Set the OAuth2 endpoint and credentials
         token_url = url
-        client_id = 'uFkxYQ1Ua0ktC5ARswbGQ7j0TllZUjD7'
-        client_secret = 'dojCWDgyJPqrNYdh'
+        client_id = ''
+        client_secret = ''
 
         # Set the grant type and scope
-        grant_type = 'client_credentials'
-        scope = 'rft-tire-size-recognition'
+        grant_type = ''
+        scope = ''
 
         # Make a request to the token endpoint to obtain an access token
         response = requests.post(
@@ -100,7 +101,7 @@ def api_call(image_path):
         files = {'tire_image': image_file}
         body = {'requester_name': 'Mimetype', 'unique_request_id': 'debug-mimetype-123'}
         access_token = get_access_token()
-        customer_combo_client_id = 'uFkxYQ1Ua0ktC5ARswbGQ7j0TllZUjD7'
+        customer_combo_client_id = ''
         headers = {
             'Authorization': f'Bearer {access_token}',
             'apikey': customer_combo_client_id,
